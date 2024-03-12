@@ -1,10 +1,13 @@
-# Filename: distributed_work_queue.py
-import redis
+"""
+workqueue.py - A distributed work queue using Redis.
+"""
 from typing import Any, Callable
 import json
 import multiprocessing
+import redis
 
 class DistributedWorkQueue:
+    """A distributed work queue using Redis."""
     def __init__(self, redis_host='localhost', redis_port=6379, redis_db=0, queue_name='work_queue'):
         """Initialize a connection to the Redis server."""
         self.queue_name = queue_name
@@ -31,12 +34,13 @@ class DistributedWorkQueue:
                 work_item = self.dequeue_work()
                 # Process the work item
                 worker_function(work_item)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-except
                 print(f"Error processing work item: {e}")
 
 # Example usage:
 if __name__ == '__main__':
     def example_worker(work_item):
+        """Example worker function that processes work items."""
         print(f"Processing: {work_item}")
 
     # Initialize the distributed work queue

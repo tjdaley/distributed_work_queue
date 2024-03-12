@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "distributed_work_queue"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
 	{ name="Thomas J. Daley", email="tom@powerdaley.com" },
 ]
@@ -12,7 +12,7 @@ description = "Allows processes to queue work that is dequeued and performed by 
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-	"redis"
+	"redis>=5.0.3"
 ]
 classifiers = [
 	"Programming Language :: Python :: 3.11",
