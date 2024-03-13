@@ -22,7 +22,10 @@ class DistributedWorkQueue:
     def dequeue_work(self, timeout: int = 0) -> Any:
         """Dequeue a work item from the Redis queue."""
         # Atomically remove and return the first item of the list
-        _, work_item_str = self.redis_connection.blpop(self.queue_name, timeout=timeout)
+        try:
+            _, work_item_str = self.redis_connection.blpop(self.queue_name, timeout=timeout)
+        except TypeError:
+            return None
         # Convert the JSON string back to a Python object
         try:
             return json.loads(work_item_str)
