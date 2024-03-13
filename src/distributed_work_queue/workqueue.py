@@ -19,12 +19,15 @@ class DistributedWorkQueue:
         work_item_str = json.dumps(work_item)
         self.redis_connection.rpush(self.queue_name, work_item_str)
 
-    def dequeue_work(self) -> Any:
+    def dequeue_work(self, timeout: int = 0) -> Any:
         """Dequeue a work item from the Redis queue."""
         # Atomically remove and return the first item of the list
-        _, work_item_str = self.redis_connection.blpop(self.queue_name)
+        _, work_item_str = self.redis_connection.blpop(self.queue_name, timeout=timeout)
         # Convert the JSON string back to a Python object
-        return json.loads(work_item_str)
+        try:
+            return json.loads(work_item_str)
+        except json.JSONDecodeError:
+            return work_item_str
 
     def worker_process(self, worker_function: Callable):
         """Continuously process work items using the provided worker function."""
