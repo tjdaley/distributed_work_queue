@@ -11,6 +11,7 @@ from falconlogger.flogger import FalconLogger
 
 load_dotenv()
 DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
+MAKE_IT_RIGHT = os.getenv('MAKE_IT_RIGHT', 'false').lower() == 'true'
 
 class DistributedWorkQueue:
     """A distributed work queue using Redis."""
@@ -38,8 +39,11 @@ class DistributedWorkQueue:
     def enqueue_work(self, work_item: dict):
         """Enqueue a work item to the Redis queue."""
         # Convert the work item to a JSON string to store in Redis
+        if isinstance(work_item, str):
+            if MAKE_IT_RIGHT:
+                work_item = self.attempt_repair(work_item)
         if not isinstance(work_item, dict):
-            raise ValueError("work_item must be a dict.")
+            raise ValueError("work_item must be a dict: %s", work_item)
         work_item_str = json.dumps(work_item)
         self.redis_connection.rpush(self.queue_name, work_item_str)
         self.logger.debug("Queued: %s", work_item_str)
@@ -70,6 +74,24 @@ class DistributedWorkQueue:
                 worker_function(work_item)
             except Exception as e:  # pylint: disable=broad-except
                 self.logger.error("Error processing work item: %s", e)
+
+    def attempt_repair(self, bad_value):
+        """
+        Attempt to convert a string to a dict.
+
+        Args:
+            bad_value (str): Value that is not a dict
+
+        Returns:
+            (dict): Returned if string could be converted to dict otherwise *bad_value* is returned.
+        """
+        if isinstance(bad_value, str):
+            try:
+                d = json.loads(bad_value)
+                return d
+            except:
+                pass
+        return bad_value
 
 # Example usage:
 if __name__ == '__main__':
