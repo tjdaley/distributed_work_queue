@@ -4,12 +4,20 @@ workqueue.py - A distributed work queue using Redis.
 from typing import Any, Callable
 import json
 import multiprocessing
+import os
 import redis
+from dotenv import load_dotenv
+from falconlogger.flogger import FalconLogger
+
+load_dotenv()
+DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
 
 class DistributedWorkQueue:
     """A distributed work queue using Redis."""
     def __init__(self, redis_host='localhost', redis_port=6379, redis_db=0, queue_name='work_queue'):
         """Initialize a connection to the Redis server."""
+        self.logger = FalconLogger(f'DWQ:{queue_name}')
+        self.logger.info('Connecting to %s at %s:%s', queue_name, redis_host, redis_port)
         self.queue_name = queue_name
         self.redis_connection = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
 
