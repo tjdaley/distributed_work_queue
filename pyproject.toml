@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "distributed_work_queue"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
 	{ name="Thomas J. Daley", email="tom@powerdaley.com" },
 ]
@@ -14,7 +14,7 @@ requires-python = ">=3.11"
 dependencies = [
 	"redis>=5.0.3",
  	"python-dotenv",
-  	"git+https://github.com/tjdaley/falconlogger.git"
+  	"falconlogger@git+https://github.com/tjdaley/falconlogger.git"
 ]
 classifiers = [
 	"Programming Language :: Python :: 3.11",
