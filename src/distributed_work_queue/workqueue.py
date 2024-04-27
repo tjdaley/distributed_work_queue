@@ -48,8 +48,13 @@ class DistributedWorkQueue:
         self.redis_connection.rpush(self.queue_name, work_item_str)
         self.logger.debug("Queued: %s", work_item_str)
 
-    def dequeue_work(self, timeout: int = 0) -> Any:
-        """Dequeue a work item from the Redis queue."""
+    def dequeue_work(self, timeout: int = 0) -> dict:
+        """
+        Dequeue a work item from the Redis queue.
+        
+        Returns a dict if the dequeued item was successfully converted to a dict.
+        Otherwise, it returns whatever it dequeued, e.g. a str.
+        """
         # Atomically remove and return the first item of the list
         try:
             _, work_item_str = self.redis_connection.blpop(self.queue_name, timeout=timeout)
