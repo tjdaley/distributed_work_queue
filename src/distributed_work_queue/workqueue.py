@@ -31,7 +31,7 @@ class DistributedWorkQueue:
         """
         for key in self.redis_connection.scan_iter('*'):
             self.logger.debug("Found queue/key %s", key)
-            if key == self.queue_name:
+            if key.decode() == self.queue_name:
                 return True
         self.logger.warn("Unable to locate %s in the list of queue/keys", self.queue_name)
         return False
