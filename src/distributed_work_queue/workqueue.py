@@ -57,12 +57,19 @@ class DistributedWorkQueue:
         """
         # Atomically remove and return the first item of the list
         try:
-            _, work_item_str = self.redis_connection.blpop(self.queue_name, timeout=timeout)
+            response = self.redis_connection.blpop(self.queue_name, timeout=timeout)
+            if response is None:
+                return None
+            work_item_str = response[1]  # response[2] is the key that was read
             self.logger.debug("Dequeued: %s", work_item_str)
         except TypeError as e:
             self.logger.error("Error dequeueing work: %s", e)
             return None
-        # Convert the JSON string back to a Python object
+        except Exception as e:
+            self.logger.error("General error dequeueing work: %s", e)
+            return None
+
+        # Convert the JSON string back to a Python object, if possible
         try:
             return json.loads(work_item_str)
         except json.JSONDecodeError as e:
