@@ -21,23 +21,29 @@ class DistributedWorkQueue:
         self.queue_name = queue_name
         self.redis_connection = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
 
-    def enqueue_work(self, work_item: Any):
+    def enqueue_work(self, work_item: dict):
         """Enqueue a work item to the Redis queue."""
         # Convert the work item to a JSON string to store in Redis
+        if not isinstance(work_item, dict):
+            raise ValueError("work_item must be a dict.")
         work_item_str = json.dumps(work_item)
         self.redis_connection.rpush(self.queue_name, work_item_str)
+        self.logger.debug("Queued: %s", work_item_str)
 
     def dequeue_work(self, timeout: int = 0) -> Any:
         """Dequeue a work item from the Redis queue."""
         # Atomically remove and return the first item of the list
         try:
             _, work_item_str = self.redis_connection.blpop(self.queue_name, timeout=timeout)
-        except TypeError:
+            self.logger.debug("Dequeued: %s", work_item_str)
+        except TypeError as e:
+            self.logger.error("Error dequeueing work: %s", e)
             return None
         # Convert the JSON string back to a Python object
         try:
             return json.loads(work_item_str)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            self.logger.warn("Invalid JSON string: %s, %s", e, work_item_str)
             return work_item_str
 
     def worker_process(self, worker_function: Callable):
@@ -49,7 +55,7 @@ class DistributedWorkQueue:
                 # Process the work item
                 worker_function(work_item)
             except Exception as e:  # pylint: disable=broad-except
-                print(f"Error processing work item: {e}")
+                self.logger.error("Error processing work item: %s", e)
 
 # Example usage:
 if __name__ == '__main__':
