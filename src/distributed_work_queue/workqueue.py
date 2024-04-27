@@ -20,6 +20,20 @@ class DistributedWorkQueue:
         self.logger.info('Connecting to %s at %s:%s', queue_name, redis_host, redis_port)
         self.queue_name = queue_name
         self.redis_connection = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
+        self.check_queues()
+
+    def check_queues(self) -> bool:
+        """
+        Check existing keys to see if any match the key we'll be listening on. It's not necessarily an
+        error if the key is not there, but it's a hint that something might be wrong. We scan all keys
+        in debug mode to let the operator check for slight spelling errors.
+        """
+        for key in self.redis_connection.scan_iter('*'):
+            self.logger.debug("Found queue/key %s", key)
+            if key == self.queue_name:
+                return True
+        self.logger.warn("Unable to locate %s in the list of queue/keys", self.queue_name)
+        return False
 
     def enqueue_work(self, work_item: dict):
         """Enqueue a work item to the Redis queue."""
